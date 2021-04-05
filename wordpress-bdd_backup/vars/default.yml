@@ -1,0 +1,19 @@
+---
+
+#********************************************************************
+# Playbook : fait une copie de la bdd  et de l'instance de wordpress
+#********************************************************************
+
+
+#MySQL 
+mysql_root_password: "motDePassRoot"
+mysql_db: "dbwordpress"
+mysql_user: "dbadmin"
+mysql_password: "dbxpass"
+
+
+# Synchroniser avec l'inventaire hosts
+#http_host: [ 'p6-u18-web','p6-u18-db,'p6-test']
+http_host: [ 'p6-u18-db']
+http_port: "80"
+

@@ -1,0 +1,13 @@
+#######
+# Nécessite impérativement:
+# Python 3 (/usr/bin/python3) sur les hôtes distant.
+# [all:vars] rend les variables global sur tous les servers.
+#######
+
+[servers]
+#p6-u18-web ansible_host=192.168.122.14
+p6-u18-db ansible_host=192.168.122.15
+#p6-test ansible_host=192.168.122.13
+
+[all:vars]
+ansible_python_interpreter=/usr/bin/python3

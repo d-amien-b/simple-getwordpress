@@ -1,0 +1,18 @@
+---
+# Dépendance php  
+php_modules: [ 'php-curl', 'php-gd', 'php-mbstring', 'php-xml', 'php-xmlrpc', 'php-soap', 'php-intl', 'php-zip' ]
+
+# Pamètres MySQL 
+# La commande suivante convient parfaitement pour garder vos secrets de vos mots de passe :
+# ansible-vault encrypt_string 'foobar' --name 'mysql_root_password -> demande le motDePassRoot
+
+mysql_root_password: "motDePassRoot"
+mysql_db: "dbwordpress"
+mysql_user: "dbadmin"
+mysql_password: "dbxpass"
+
+# Synchroniser avec l'inventaire hosts
+#http_host: [ 'p6-u18-web','p6-u18-db,'p6-test']
+http_host: [ 'p6-u18-db']
+
+http_port: "80"

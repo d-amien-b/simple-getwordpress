@@ -1,0 +1,52 @@
+---
+  
+#**************************************************************
+# Playbook :  Fait une copie de la bdd et de l'instance web 
+#             copie la bdd dans mnt/mysql_backup
+#             copie l'instance dans /mnt/web_backup
+#**************************************************************
+
+- hosts: all
+  become: true
+  vars_files:
+    - vars/default.yml
+
+  tasks:  
+    - name: créé le dossier de sauvegarde de l'instance de wordpress
+      file:
+        path: /mnt/web_backup
+        owner: root
+        group: mysql
+        mode: '0774'
+        state: directory
+      tags:
+        - mysql
+    
+    - name: copie et compresse l'instance web puis la déplace 
+      community.general.archive:
+        path: /var/www/{{ item }}
+        dest: /mnt/web_backup/{{ item }}.tgz
+      loop: "{{ http_host }}"
+
+
+    - name: créé le dossier de sauvegarde de la bdd
+      file:
+        path: /mnt/mysql_backup
+        owner: root
+        group: mysql
+        mode: '0774'
+        state: directory
+      tags:
+        - mysql
+
+    - name: créé une sauvegarde la bdd et la déplace
+      mysql_db:
+        state: dump
+        name: all
+        target: '/mnt/mysql_backup/{{ item }}-{{ ansible_date_time.date }}-{{ ansible_date_time.time }}.sql'
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+      loop: "{{ http_host }}"
+      tags: [ mysql ]
+
+
