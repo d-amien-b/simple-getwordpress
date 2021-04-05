@@ -82,12 +82,12 @@ Les variables se trouvent dans le fichier default.yml qui se trouve dans le doss
 ## Exécution du playbook 1 - Dans le dossier wordpress-lamp
     $ cd ansible-playbooks
     $ cd wordpress-lamp
-    $ ansible-playbook playbook.yml -i ../hosts -l "groupsDansInventaire"  -u "VotreUtilisateur" --ask-pass --become --ask-become-pass
+    $ ansible-playbook playbook.yml -i ../hosts --ask-pass --become --ask-become-pass
     
 ## Exécution du playbook 2 : commande idem précédente depuis wordpress-bdd_backup :) 
     $ cd ..
     $ cd wordpress-bdd_backup
-    $ ansible-playbook playbook.yml -i ../hosts -l "groupsDansInventaire"  -u "VotreUtilisateur" --ask-pass --become --ask-become-pass
+    $ ansible-playbook playbook.yml -i ../hosts --ask-pass --become --ask-become-pass
 
 # ** Vos machines sont prêtes en quelques minutes par machine **
 
@@ -98,3 +98,5 @@ Les variables se trouvent dans le fichier default.yml qui se trouve dans le doss
     https://www.digitalocean.com/community/tutorials/how-to-install-linux-apache-mysql-php-lamp-stack-on-ubuntu-20-04-quickstart-fr
     https://www.digitalocean.com/community/tutorials/how-to-install-and-configure-ansible-on-ubuntu-20-04-fr
     https://docs.ansible.com/
+
+## MIT License

@@ -9,23 +9,32 @@
   vars_files:
     - vars/default.yml
 
+  # une tâche principale
   tasks:
 
+    ### Rôle système
+    # Applique le gestionnaire de paquet aptitude qui va permettre de forcer les installations
+    # et mettre à jour le cache
     - name: Install prerequisites
       apt: name=aptitude update_cache=yes state=latest force_apt_get=yes
       tags: [ system ]
 
+    ### Rôle d'installation de LAMP
+    # Installation du package LAMP
     - name: Install LAMP Packages
       apt: name={{ item }} update_cache=yes state=latest
       loop: [ 'apache2', 'mysql-server', 'python3-pymysql', 'php', 'php-mysql', 'libapache2-mod-php' ]
       tags: [ system ]
-
+    
+    # Installation des dépendances de base de php - Liste dans defaults.yml
     - name: Install PHP Extensions
       apt: name={{ item }} update_cache=yes state=latest
       loop: "{{ php_modules }}"
       tags: [ system ]
 
-  # Configuration Apache 
+    # Configuration de Apache
+    # Création du dossier dans lequel sera installé le site wordpress
+    # avec les droits de propriétés, de groups et de mode du dossier
     - name: Create document root
       file:
         path: "/var/www/{{ item }}"
@@ -36,6 +45,10 @@
       loop: "{{ http_host }}"
       tags: [ apache ]
 
+    # Configuration apache
+    # Création du virtual host du site en copiant le fichier apache.conf 
+    # qui portera le nom "'hosts'.conf" dans le dossier "sites-available"
+    # et notifie la necessité de recharger php
     - name: Set up Apache VirtualHost
       template:
         src: "files/apache.conf.j2"
@@ -44,23 +57,33 @@
       notify: Reload Apache
       tags: [ apache ]
 
+    # Configuration apache
+    # Active le mode de réécriture des url et notifie la necessité de recharger php
     - name: Enable rewrite module
       shell: /usr/sbin/a2enmod rewrite
       notify: Reload Apache
       tags: [ apache ]
 
+    # Configuration apache
+    # créer le lien symbolique dans le dossier sites-enable
+    # et notifie la necessité de recharger php
     - name: Enable new site
       shell: /usr/sbin/a2ensite "{{ item }}.conf"
       loop: "{{ http_host }}"
       notify: Reload Apache
       tags: [ apache ]
 
+    # Configuration apache
+    # Désactive le site par défaut (page de php)
+    # en supprimant le lien symbolique du dossier sites-enable
     - name: Disable default Apache site
       shell: /usr/sbin/a2dissite 000-default.conf
       notify: Restart Apache
       tags: [ apache ]
 
   # Configuration MySQL 
+  # Change le mot de passe du compt root
+  # La variable du mot de passe se trouve dans defaults.yml
     - name: Set the root password
       mysql_user:
         name: root
@@ -68,6 +91,9 @@
         login_unix_socket: /var/run/mysqld/mysqld.sock
       tags: [ mysql, mysql-root ]
 
+    # Configuration MySQL 
+    # Supprime les comptes d'utilisateurs anonymes
+    # La variable du mot de passe se trouve dans defaults.yml
     - name: Remove all anonymous user accounts
       mysql_user:
         name: ''
@@ -77,6 +103,9 @@
         login_password: "{{ mysql_root_password }}"
       tags: [ mysql ]
 
+    # Configuration MySQL 
+    # Supprime la database de test
+    # La variable du mot de passe root se trouve dans defaults.yml
     - name: Remove the MySQL test database
       mysql_db:
         name: test
@@ -85,6 +114,10 @@
         login_password: "{{ mysql_root_password }}"
       tags: [ mysql ]
 
+    # Configuration MySQL 
+    # Créer la database de wordpress
+    # La variable du nom de la database se trouve dans defaults.yml
+    # La variable du mot de passe root se trouve dans defaults.yml
     - name: Creates database for WordPress
       mysql_db:
         name: "{{ mysql_db }}"
@@ -93,6 +126,12 @@
         login_password: "{{ mysql_root_password }}"
       tags: [ mysql ]
 
+    # Configuration MySQL 
+    # Créer l'utilisateur de la database de wordpress
+    # La variable de mot de passe de l'utilisateur de la database de wordpress se trouve dans defaults.yml
+    # La variable du nom de la database se trouve dans defaults.yml
+    # Utilisation de la commande priv: pour les droits 'accès' sudoers
+    # La variable du mot de passe root se trouve dans defaults.yml
     - name: Create MySQL user for WordPress
       mysql_user:
         name: "{{ mysql_user }}"
@@ -103,7 +142,9 @@
         login_password: "{{ mysql_root_password }}"
       tags: [ mysql ]
 
-  # Configuration pare-feu UFW 
+    # Configuration système - pare-feu UFW 
+    # La variable du port http se trouve dans defaults.yml
+    # Par défaut celle-ci authorise l'accès sur le port 80
     - name: "UFW - Allow HTTP on port {{ http_port }}"
       ufw:
         rule: allow
@@ -111,7 +152,9 @@
         proto: tcp
       tags: [ system ]   
 
-  # Configuration WordPress 
+    # Configuration WordPress 
+    # Téléchargement de la version stable la plus récente sur le node en cours {{item}}
+    # Copie et décompression dans le dossier /var/www/ "nom du host" / wordpress
     - name: Download and unpack latest WordPress
       unarchive:
         src: https://wordpress.org/latest.tar.gz
@@ -121,6 +164,8 @@
       loop: "{{ http_host }}"
       tags: [ wordpress ]
 
+    # Configuration WordPress 
+    # Attribut récursivement les différentes propriétés et autres attributs indispensables aux fichiers et dossiers
     - name: Set ownership
       file:
         path: "/var/www/{{ item }}"
@@ -131,16 +176,22 @@
       loop: "{{ http_host }}"
       tags: [ wordpress ]
 
+    # Configuration WordPress 
+    # Attribut les différentes permissions indispensables au dossier de wordpress
     - name: Set permissions for directories
       shell: "/usr/bin/find /var/www/{{ item }}/wordpress/ -type d -exec chmod 750 {} \\;"
       loop: "{{ http_host }}"
       tags: [ wordpress ]
 
+    # Configuration WordPress 
+    # Attribut les différentes permissions indispensables aux fichiers de wordpress
     - name: Set permissions for files
       shell: "/usr/bin/find /var/www/{{ item }}/wordpress/ -type f -exec chmod 640 {} \\;"
       loop: "{{ http_host }}"
       tags: [ wordpress ]
 
+    # Configuration WordPress 
+    # Copie le fichier de configuration "wp-config.php" à la racine de wordpress
     - name: Set up wp-config
       template:
         src: "files/wp-config.php.j2"
@@ -148,6 +199,8 @@
       loop: "{{ http_host }}"               
       tags: [ wordpress ]
 
+  # Rôle de notification
+  # recharge et restart à partir des notifications reçus
   handlers:
     - name: Reload Apache
       service:

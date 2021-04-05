@@ -11,7 +11,11 @@
   vars_files:
     - vars/default.yml
 
+  # une tâche principale
   tasks:  
+
+    # Créer le dossier de sauvegarde "web_backup" de l'instance de wordpress dans /mnt/
+    # avec les propriétés, group et droits adequates
     - name: créé le dossier de sauvegarde de l'instance de wordpress
       file:
         path: /mnt/web_backup
@@ -21,14 +25,17 @@
         state: directory
       tags:
         - mysql
-    
+
+    # Copie et compresse l'instance web puis la déplace 
+    # dans le dossier /var/www/"'nomdu hosts'.tgz"
     - name: copie et compresse l'instance web puis la déplace 
       community.general.archive:
         path: /var/www/{{ item }}
         dest: /mnt/web_backup/{{ item }}.tgz
       loop: "{{ http_host }}"
 
-
+    # Créer le dossier de sauvegarde "mysql_backup de la bdd dans /mnt/
+    # avec la propriété root, le group mysql et les droits adequates
     - name: créé le dossier de sauvegarde de la bdd
       file:
         path: /mnt/mysql_backup
@@ -39,6 +46,9 @@
       tags:
         - mysql
 
+    # Créer une sauvegarde de la bdd et la déplace 
+    # dans le dossier /var/www/backup/"'nomdu hosts'-'date'-'heure'.sql"
+    # La variable du mot de passe root se trouve dans defaults.yml
     - name: créé une sauvegarde la bdd et la déplace
       mysql_db:
         state: dump
