@@ -12,7 +12,7 @@ mysql_user: "dbadmin"
 mysql_password: "dbxpass"
 
 # Synchroniser avec l'inventaire hosts
-#http_host: [ 'p6-u18-web','p6-u18-db,'p6-test']
-http_host: [ 'p6-u18-web','p6-test']
+# L'installation doit s'effectuer par machine sinon les automatisations seront en doublon !!!!
+http_host: [ 'p6-u18-web']
 
 http_port: "80"
